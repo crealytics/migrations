@@ -46,6 +46,11 @@ public class Environment {
     url,
     username,
     password,
+    migration_log_driver_path,
+    migration_log_driver,
+    migration_log_url,
+    migration_log_username,
+    migration_log_password,
     hook_before_up,
     hook_before_each_up,
     hook_after_each_up,
@@ -77,11 +82,18 @@ public class Environment {
   private final boolean autoCommit;
   private final boolean removeCrs;
   private final boolean ignoreWarnings;
+
   private final String driverPath;
   private final String driver;
   private final String url;
   private final String username;
   private final String password;
+
+  private final String migrationLogDriverPath;
+  private final String migrationLogDriver;
+  private final String migrationLogUrl;
+  private final String migrationLogUsername;
+  private final String migrationLogPassword;
 
   private final String hookBeforeUp;
   private final String hookBeforeEachUp;
@@ -122,6 +134,12 @@ public class Environment {
     this.url = readProperty(prop, SETTING_KEY.url.name());
     this.username = readProperty(prop, SETTING_KEY.username.name());
     this.password = readProperty(prop, SETTING_KEY.password.name());
+
+    this.migrationLogDriverPath = readProperty(prop, SETTING_KEY.migration_log_driver_path.name());
+    this.migrationLogDriver = readProperty(prop, SETTING_KEY.migration_log_driver.name());
+    this.migrationLogUrl = readProperty(prop, SETTING_KEY.migration_log_url.name());
+    this.migrationLogUsername = readProperty(prop, SETTING_KEY.migration_log_username.name());
+    this.migrationLogPassword = readProperty(prop, SETTING_KEY.migration_log_password.name());
 
     this.hookBeforeUp = readProperty(prop, SETTING_KEY.hook_before_up.name());
     this.hookBeforeEachUp = readProperty(prop, SETTING_KEY.hook_before_each_up.name());
@@ -230,6 +248,26 @@ public class Environment {
   }
 
   public String getPassword() {
+    return password;
+  }
+
+  public String getMigrationLogDriverPath() {
+    return driverPath;
+  }
+
+  public String getMigrationLogDriver() {
+    return driver;
+  }
+
+  public String getMigrationLogUrl() {
+    return url;
+  }
+
+  public String getMigrationLogUsername() {
+    return username;
+  }
+
+  public String getMigrationLogPassword() {
     return password;
   }
 
