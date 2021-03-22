@@ -3,6 +3,9 @@
 -- Default DDL for changelog table that will keep
 -- a record of the migrations that have been run.
 
+-- If you plan to manage the changelog in a separate db,
+-- execute the query manually and remove the migration file.
+
 -- You can modify this to suit your database before
 -- running your first migration.
 
