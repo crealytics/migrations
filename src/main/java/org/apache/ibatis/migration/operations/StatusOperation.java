@@ -39,7 +39,7 @@ public final class StatusOperation extends DatabaseOperation {
 
   private List<Change> changes;
 
-  public StatusOperation operate(ConnectionProvider connectionProvider, MigrationLoader migrationsLoader,
+  public StatusOperation operate(ConnectionProvider migrationLogConnectionProvider, MigrationLoader migrationsLoader,
       DatabaseOperationOption option, PrintStream printStream) {
     if (option == null) {
       option = new DatabaseOperationOption();
@@ -49,9 +49,9 @@ public final class StatusOperation extends DatabaseOperation {
     changes = new ArrayList<Change>();
     List<Change> migrations = migrationsLoader.getMigrations();
     String skippedOrMissing = null;
-    try (Connection con = connectionProvider.getConnection()) {
-      if (changelogExists(con, option)) {
-        List<Change> changelog = getChangelog(con, option);
+    try (Connection migrationLogCon = migrationLogConnectionProvider.getConnection()) {
+      if (changelogExists(migrationLogCon, option)) {
+        List<Change> changelog = getChangelog(migrationLogCon, option);
         skippedOrMissing = checkSkippedOrMissing(changelog, migrations);
 
         Set<Change> changelogAndMigrations = new HashSet<Change>();

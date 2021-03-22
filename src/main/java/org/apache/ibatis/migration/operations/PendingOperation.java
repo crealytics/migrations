@@ -35,21 +35,26 @@ import org.apache.ibatis.migration.utils.Util;
 
 public final class PendingOperation extends DatabaseOperation {
 
-  public PendingOperation operate(ConnectionProvider connectionProvider, MigrationLoader migrationsLoader,
-      DatabaseOperationOption option, PrintStream printStream) {
-    return operate(connectionProvider, migrationsLoader, option, printStream, null);
+  public PendingOperation operate(ConnectionProvider connectionProvider, ConnectionProvider migrationLogConnectionProvider,
+                                  MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream) {
+    return operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, option, printStream, null);
   }
 
-  public PendingOperation operate(ConnectionProvider connectionProvider, MigrationLoader migrationsLoader,
-      DatabaseOperationOption option, PrintStream printStream, MigrationHook hook) {
-    try (Connection con = connectionProvider.getConnection()) {
+  public PendingOperation operate(ConnectionProvider connectionProvider, ConnectionProvider migrationLogConnectionProvider,
+                                  MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream,
+                                  MigrationHook hook) {
+    try (
+        Connection con = connectionProvider.getConnection();
+        Connection migrationLogCon = migrationLogConnectionProvider.getConnection()
+    ) {
       if (option == null) {
         option = new DatabaseOperationOption();
       }
-      if (!changelogExists(con, option)) {
-        throw new MigrationException("Change log doesn't exist, no migrations applied.  Try running 'up' instead.");
+      if (!changelogExists(migrationLogCon, option)) {
+        throw new MigrationException("Change log doesn't exist, no migrations applied.  Try running 'up' instead. " +
+            "If you manage the change log in a separate db, the log table has to be created manually.");
       }
-      List<Change> pending = getPendingChanges(con, migrationsLoader, option);
+      List<Change> pending = getPendingChanges(migrationLogCon, migrationsLoader, option);
       int stepCount = 0;
       Map<String, Object> hookBindings = new HashMap<String, Object>();
       println(printStream, "WARNING: Running pending migrations out of order can create unexpected results.");
@@ -68,7 +73,7 @@ public final class PendingOperation extends DatabaseOperation {
           println(printStream, Util.horizontalLine("Applying: " + change.getFilename(), 80));
           scriptReader = migrationsLoader.getScriptReader(change, false);
           runner.runScript(scriptReader);
-          insertChangelog(change, con, option);
+          insertChangelog(change, migrationLogCon, option);
           println(printStream);
           if (hook != null) {
             hookBindings.put(MigrationHook.HOOK_CONTEXT, new HookContext(connectionProvider, runner, change.clone()));

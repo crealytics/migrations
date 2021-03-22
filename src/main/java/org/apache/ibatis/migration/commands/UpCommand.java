@@ -34,7 +34,7 @@ public final class UpCommand extends BaseCommand {
   public void execute(String... params) {
     final int limit = getStepCountParameter(Integer.MAX_VALUE, params);
     UpOperation operation = new UpOperation(runOneStepOnly ? 1 : limit);
-    operation.operate(getConnectionProvider(), getMigrationLoader(), getDatabaseOperationOption(), printStream,
-        createUpHook());
+    operation.operate(getConnectionProvider(), getMigrationLogConnectionProvider(), getMigrationLoader(),
+        getDatabaseOperationOption(), printStream, createUpHook());
   }
 }
