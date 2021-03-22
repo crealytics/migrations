@@ -217,8 +217,8 @@ public class RuntimeMigrationTest {
     new UpOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
         new PrintStream(out));
 
-    new DownOperation(2).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader,
-        dbOption, new PrintStream(out));
+    new DownOperation(2).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
     assertEquals("1", runQuery(connectionProvider, "select count(*) from changelog"));
     assertTableDoesNotExist(connectionProvider, "first_table");
     assertTableDoesNotExist(connectionProvider, "second_table");

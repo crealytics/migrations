@@ -49,17 +49,14 @@ public final class UpOperation extends DatabaseOperation {
   }
 
   public UpOperation operate(ConnectionProvider connectionProvider, ConnectionProvider migrationLogConnectionProvider,
-                             MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream) {
+      MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream) {
     return operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, option, printStream, null);
   }
 
   public UpOperation operate(ConnectionProvider connectionProvider, ConnectionProvider migrationLogConnectionProvider,
-                             MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream,
-                             MigrationHook hook) {
-    try (
-        Connection con = connectionProvider.getConnection();
-        Connection migrationLogCon = migrationLogConnectionProvider.getConnection()
-    ) {
+      MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream, MigrationHook hook) {
+    try (Connection con = connectionProvider.getConnection();
+        Connection migrationLogCon = migrationLogConnectionProvider.getConnection()) {
       if (option == null) {
         option = new DatabaseOperationOption();
       }

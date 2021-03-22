@@ -35,24 +35,23 @@ import org.apache.ibatis.migration.utils.Util;
 
 public final class PendingOperation extends DatabaseOperation {
 
-  public PendingOperation operate(ConnectionProvider connectionProvider, ConnectionProvider migrationLogConnectionProvider,
-                                  MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream) {
+  public PendingOperation operate(ConnectionProvider connectionProvider,
+      ConnectionProvider migrationLogConnectionProvider, MigrationLoader migrationsLoader,
+      DatabaseOperationOption option, PrintStream printStream) {
     return operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, option, printStream, null);
   }
 
-  public PendingOperation operate(ConnectionProvider connectionProvider, ConnectionProvider migrationLogConnectionProvider,
-                                  MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream,
-                                  MigrationHook hook) {
-    try (
-        Connection con = connectionProvider.getConnection();
-        Connection migrationLogCon = migrationLogConnectionProvider.getConnection()
-    ) {
+  public PendingOperation operate(ConnectionProvider connectionProvider,
+      ConnectionProvider migrationLogConnectionProvider, MigrationLoader migrationsLoader,
+      DatabaseOperationOption option, PrintStream printStream, MigrationHook hook) {
+    try (Connection con = connectionProvider.getConnection();
+        Connection migrationLogCon = migrationLogConnectionProvider.getConnection()) {
       if (option == null) {
         option = new DatabaseOperationOption();
       }
       if (!changelogExists(migrationLogCon, option)) {
-        throw new MigrationException("Change log doesn't exist, no migrations applied.  Try running 'up' instead. " +
-            "If you manage the change log in a separate db, the log table has to be created manually.");
+        throw new MigrationException("Change log doesn't exist, no migrations applied.  Try running 'up' instead. "
+            + "If you manage the change log in a separate db, the log table has to be created manually.");
       }
       List<Change> pending = getPendingChanges(migrationLogCon, migrationsLoader, option);
       int stepCount = 0;

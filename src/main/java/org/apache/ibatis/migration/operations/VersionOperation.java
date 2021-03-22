@@ -40,19 +40,22 @@ public final class VersionOperation extends DatabaseOperation {
     }
   }
 
-  public VersionOperation operate(ConnectionProvider connectionProvider, ConnectionProvider migrationLogConnectionProvider,
-                                  MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream) {
-    return operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, option, printStream, null, null);
+  public VersionOperation operate(ConnectionProvider connectionProvider,
+      ConnectionProvider migrationLogConnectionProvider, MigrationLoader migrationsLoader,
+      DatabaseOperationOption option, PrintStream printStream) {
+    return operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, option, printStream, null,
+        null);
   }
 
-  public VersionOperation operate(ConnectionProvider connectionProvider, ConnectionProvider migrationLogConnectionProvider,
-                                  MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream,
-                                  MigrationHook upHook, MigrationHook downHook) {
+  public VersionOperation operate(ConnectionProvider connectionProvider,
+      ConnectionProvider migrationLogConnectionProvider, MigrationLoader migrationsLoader,
+      DatabaseOperationOption option, PrintStream printStream, MigrationHook upHook, MigrationHook downHook) {
     if (option == null) {
       option = new DatabaseOperationOption();
     }
     try (Connection migrationLogCon = migrationLogConnectionProvider.getConnection()) {
-      List<Change> changesInDb = changelogExists(migrationLogCon, option) ? getChangelog(migrationLogCon, option) : Collections.emptyList();
+      List<Change> changesInDb = changelogExists(migrationLogCon, option) ? getChangelog(migrationLogCon, option)
+          : Collections.emptyList();
       List<Change> migrations = migrationsLoader.getMigrations();
       Change specified = new Change(version);
       if (!migrations.contains(specified)) {
@@ -67,7 +70,8 @@ public final class VersionOperation extends DatabaseOperation {
             steps++;
           }
         }
-        new UpOperation(steps).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, option, printStream, upHook);
+        new UpOperation(steps).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, option,
+            printStream, upHook);
       } else if (specified.compareTo(lastChangeInDb) < 0) {
         println(printStream, "Downgrading to: " + version);
         int steps = 0;
@@ -76,7 +80,8 @@ public final class VersionOperation extends DatabaseOperation {
             steps++;
           }
         }
-        new DownOperation(steps).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, option, printStream, downHook);
+        new DownOperation(steps).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, option,
+            printStream, downHook);
       } else {
         println(printStream, "Already at version: " + version);
       }

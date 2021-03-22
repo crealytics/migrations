@@ -232,8 +232,7 @@ public abstract class BaseCommand implements Command {
         return new JdbcConnectionProvider(getDriverClassLoader(environment().getMigrationLogDriverPath()),
             environment().getMigrationLogDriver(), environment().getMigrationLogUrl(),
             environment().getMigrationLogUsername(), environment().getMigrationLogPassword());
-      }
-      else {
+      } else {
         return getConnectionProvider();
       }
     } catch (Exception e) {
