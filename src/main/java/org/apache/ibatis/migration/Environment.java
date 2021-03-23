@@ -252,23 +252,23 @@ public class Environment {
   }
 
   public String getMigrationLogDriverPath() {
-    return driverPath;
+    return migrationLogDriverPath;
   }
 
   public String getMigrationLogDriver() {
-    return driver;
+    return migrationLogDriver;
   }
 
   public String getMigrationLogUrl() {
-    return url;
+    return migrationLogUrl;
   }
 
   public String getMigrationLogUsername() {
-    return username;
+    return migrationLogUsername;
   }
 
   public String getMigrationLogPassword() {
-    return password;
+    return migrationLogPassword;
   }
 
   public String getHookBeforeUp() {
