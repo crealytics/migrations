@@ -103,7 +103,8 @@ public class RuntimeMigrationTest {
 
   @Test
   public void testBootstrapOperation() throws Exception {
-    new BootstrapOperation().operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new BootstrapOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
     assertEquals("0", runQuery(connectionProvider, "select count(*) from bootstrap_table"));
   }
 
@@ -112,7 +113,8 @@ public class RuntimeMigrationTest {
     new UpOperation(1).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
         new PrintStream(out));
 
-    new BootstrapOperation().operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new BootstrapOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
     assertTableDoesNotExist(connectionProvider, "bootstrap_table");
   }
 
