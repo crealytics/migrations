@@ -26,7 +26,7 @@ public final class PendingCommand extends BaseCommand {
   @Override
   public void execute(String... params) {
     PendingOperation operation = new PendingOperation();
-    operation.operate(getConnectionProvider(), getMigrationLoader(), getDatabaseOperationOption(), printStream,
-        createUpHook());
+    operation.operate(getConnectionProvider(), getMigrationLogConnectionProvider(), getMigrationLoader(),
+        getDatabaseOperationOption(), printStream, createUpHook());
   }
 }

@@ -37,13 +37,15 @@ public final class BootstrapOperation extends DatabaseOperation {
     this.force = force;
   }
 
-  public BootstrapOperation operate(ConnectionProvider connectionProvider, MigrationLoader migrationsLoader,
+  public BootstrapOperation operate(ConnectionProvider connectionProvider,
+      ConnectionProvider migrationLogConnectionProvider, MigrationLoader migrationsLoader,
       DatabaseOperationOption option, PrintStream printStream) {
-    try (Connection con = connectionProvider.getConnection()) {
+    try (Connection con = connectionProvider.getConnection();
+        Connection migrationLogCon = migrationLogConnectionProvider.getConnection()) {
       if (option == null) {
         option = new DatabaseOperationOption();
       }
-      if (changelogExists(con, option) && !force) {
+      if (changelogExists(migrationLogCon, option) && !force) {
         println(printStream,
             "For your safety, the bootstrap SQL script will only run before migrations are applied (i.e. before the changelog exists).  If you're certain, you can run it using the --force option.");
       } else {

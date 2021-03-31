@@ -44,20 +44,21 @@ public final class DownOperation extends DatabaseOperation {
     this.steps = steps;
   }
 
-  public DownOperation operate(ConnectionProvider connectionProvider, MigrationLoader migrationsLoader,
-      DatabaseOperationOption option, PrintStream printStream) {
-    return operate(connectionProvider, migrationsLoader, option, printStream, null);
+  public DownOperation operate(ConnectionProvider connectionProvider, ConnectionProvider migrationLogConnectionProvider,
+      MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream) {
+    return operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, option, printStream, null);
   }
 
-  public DownOperation operate(ConnectionProvider connectionProvider, MigrationLoader migrationsLoader,
-      DatabaseOperationOption option, PrintStream printStream, MigrationHook hook) {
-    try (Connection con = connectionProvider.getConnection()) {
+  public DownOperation operate(ConnectionProvider connectionProvider, ConnectionProvider migrationLogConnectionProvider,
+      MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream, MigrationHook hook) {
+    try (Connection con = connectionProvider.getConnection();
+        Connection migrationLogCon = migrationLogConnectionProvider.getConnection()) {
       if (option == null) {
         option = new DatabaseOperationOption();
       }
       List<Change> changesInDb = Collections.emptyList();
-      if (changelogExists(con, option)) {
-        changesInDb = getChangelog(con, option);
+      if (changelogExists(migrationLogCon, option)) {
+        changesInDb = getChangelog(migrationLogCon, option);
       }
       if (changesInDb.isEmpty()) {
         println(printStream, "Changelog exist, but no migration found.");
@@ -83,8 +84,8 @@ public final class DownOperation extends DatabaseOperation {
             }
             println(printStream, Util.horizontalLine("Undoing: " + change.getFilename(), 80));
             runner.runScript(migrationsLoader.getScriptReader(change, true));
-            if (changelogExists(con, option)) {
-              deleteChange(con, change, option);
+            if (changelogExists(migrationLogCon, option)) {
+              deleteChange(migrationLogCon, change, option);
             } else {
               println(printStream,
                   "Changelog doesn't exist. No further migrations will be undone (normal for the last migration).");

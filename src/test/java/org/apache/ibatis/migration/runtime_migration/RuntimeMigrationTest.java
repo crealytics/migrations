@@ -52,6 +52,7 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class RuntimeMigrationTest {
   private final JdbcConnectionProvider connectionProvider;
+  private final JdbcConnectionProvider migrationLogConnectionProvider;
   private DatabaseOperationOption dbOption;
   private ByteArrayOutputStream out;
   private MigrationLoader migrationsLoader;
@@ -73,6 +74,8 @@ public class RuntimeMigrationTest {
     } else {
       connectionProvider = new JdbcConnectionProvider(classLoader, driver, url, username, password);
     }
+
+    migrationLogConnectionProvider = connectionProvider;
   }
 
   @Before
@@ -100,21 +103,25 @@ public class RuntimeMigrationTest {
 
   @Test
   public void testBootstrapOperation() throws Exception {
-    new BootstrapOperation().operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new BootstrapOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
     assertEquals("0", runQuery(connectionProvider, "select count(*) from bootstrap_table"));
   }
 
   @Test
   public void shouldIgnoreBootstrapIfChangelogExists() {
-    new UpOperation(1).operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new UpOperation(1).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
 
-    new BootstrapOperation().operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new BootstrapOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
     assertTableDoesNotExist(connectionProvider, "bootstrap_table");
   }
 
   @Test
   public void testUp() throws Exception {
-    new UpOperation().operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new UpOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
     assertEquals("3", runQuery(connectionProvider, "select count(*) from changelog"));
     assertEquals("0", runQuery(connectionProvider, "select count(*) from first_table"));
     assertEquals("0", runQuery(connectionProvider, "select count(*) from second_table"));
@@ -128,8 +135,10 @@ public class RuntimeMigrationTest {
 
   @Test
   public void testUpFromDifferentBranches() throws Exception {
-    new UpOperation().operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
-    new UpOperation().operate(connectionProvider, migrationsLoaderFromOtherBranch, dbOption, new PrintStream(out));
+    new UpOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
+    new UpOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoaderFromOtherBranch,
+        dbOption, new PrintStream(out));
     assertEquals("4", runQuery(connectionProvider, "select count(*) from changelog"));
     assertEquals("0", runQuery(connectionProvider, "select count(*) from first_table"));
     assertEquals("0", runQuery(connectionProvider, "select count(*) from second_table"));
@@ -145,7 +154,8 @@ public class RuntimeMigrationTest {
 
   @Test
   public void testUpWithStep() throws Exception {
-    new UpOperation(2).operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new UpOperation(2).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
     assertEquals("2", runQuery(connectionProvider, "select count(*) from changelog"));
     assertEquals("0", runQuery(connectionProvider, "select count(*) from first_table"));
     assertTableDoesNotExist(connectionProvider, "second_table");
@@ -175,14 +185,16 @@ public class RuntimeMigrationTest {
         printStream.println("<AFTER>");
       }
     };
-    new UpOperation(3).operate(connectionProvider, migrationsLoader, dbOption, printStream, hook);
+    new UpOperation(3).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        printStream, hook);
     String output = out.toString("utf-8");
     assertEquals(1, TestUtil.countStr(output, "<BEFORE>"));
     assertEquals(3, TestUtil.countStr(output, "<BEFORE_EACH>"));
     assertEquals(3, TestUtil.countStr(output, "<AFTER_EACH>"));
     assertEquals(1, TestUtil.countStr(output, "<AFTER>"));
     out.reset();
-    new DownOperation(2).operate(connectionProvider, migrationsLoader, dbOption, printStream, hook);
+    new DownOperation(2).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        printStream, hook);
     output = out.toString("utf-8");
     assertEquals(1, TestUtil.countStr(output, "<BEFORE>"));
     assertEquals(2, TestUtil.countStr(output, "<BEFORE_EACH>"));
@@ -192,9 +204,11 @@ public class RuntimeMigrationTest {
 
   @Test
   public void testDown() throws Exception {
-    new UpOperation().operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new UpOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
 
-    new DownOperation().operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new DownOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
     assertEquals("2", runQuery(connectionProvider, "select count(*) from changelog"));
     assertEquals("0", runQuery(connectionProvider, "select count(*) from first_table"));
     assertTableDoesNotExist(connectionProvider, "second_table");
@@ -202,9 +216,11 @@ public class RuntimeMigrationTest {
 
   @Test
   public void testDownWithStep() throws Exception {
-    new UpOperation().operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new UpOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
 
-    new DownOperation(2).operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new DownOperation(2).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
     assertEquals("1", runQuery(connectionProvider, "select count(*) from changelog"));
     assertTableDoesNotExist(connectionProvider, "first_table");
     assertTableDoesNotExist(connectionProvider, "second_table");
@@ -212,12 +228,14 @@ public class RuntimeMigrationTest {
 
   @Test
   public void testPending() throws Exception {
-    new UpOperation().operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new UpOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
 
     runSql(connectionProvider, "drop table first_table");
     runSql(connectionProvider, "delete from changelog where id = 20130707120738");
 
-    new PendingOperation().operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
+    new PendingOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
+        new PrintStream(out));
     assertEquals("3", runQuery(connectionProvider, "select count(*) from changelog"));
     assertEquals("0", runQuery(connectionProvider, "select count(*) from first_table"));
   }
@@ -225,10 +243,11 @@ public class RuntimeMigrationTest {
   @Test
   public void testVersionUp() throws Exception {
     // Need changelog.
-    new UpOperation(1).operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
-
-    new VersionOperation(new BigDecimal("20130707120738")).operate(connectionProvider, migrationsLoader, dbOption,
+    new UpOperation(1).operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
         new PrintStream(out));
+
+    new VersionOperation(new BigDecimal("20130707120738")).operate(connectionProvider, migrationLogConnectionProvider,
+        migrationsLoader, dbOption, new PrintStream(out));
     assertEquals("2", runQuery(connectionProvider, "select count(*) from changelog"));
     assertEquals("0", runQuery(connectionProvider, "select count(*) from first_table"));
     assertTableDoesNotExist(connectionProvider, "second_table");
@@ -236,10 +255,11 @@ public class RuntimeMigrationTest {
 
   @Test
   public void testVersionDown() throws Exception {
-    new UpOperation().operate(connectionProvider, migrationsLoader, dbOption, new PrintStream(out));
-
-    new VersionOperation(new BigDecimal("20130707120738")).operate(connectionProvider, migrationsLoader, dbOption,
+    new UpOperation().operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, dbOption,
         new PrintStream(out));
+
+    new VersionOperation(new BigDecimal("20130707120738")).operate(connectionProvider, migrationLogConnectionProvider,
+        migrationsLoader, dbOption, new PrintStream(out));
     assertEquals("2", runQuery(connectionProvider, "select count(*) from changelog"));
     assertEquals("0", runQuery(connectionProvider, "select count(*) from first_table"));
     assertTableDoesNotExist(connectionProvider, "second_table");

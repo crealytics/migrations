@@ -48,21 +48,22 @@ public final class UpOperation extends DatabaseOperation {
     }
   }
 
-  public UpOperation operate(ConnectionProvider connectionProvider, MigrationLoader migrationsLoader,
-      DatabaseOperationOption option, PrintStream printStream) {
-    return operate(connectionProvider, migrationsLoader, option, printStream, null);
+  public UpOperation operate(ConnectionProvider connectionProvider, ConnectionProvider migrationLogConnectionProvider,
+      MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream) {
+    return operate(connectionProvider, migrationLogConnectionProvider, migrationsLoader, option, printStream, null);
   }
 
-  public UpOperation operate(ConnectionProvider connectionProvider, MigrationLoader migrationsLoader,
-      DatabaseOperationOption option, PrintStream printStream, MigrationHook hook) {
-    try (Connection con = connectionProvider.getConnection()) {
+  public UpOperation operate(ConnectionProvider connectionProvider, ConnectionProvider migrationLogConnectionProvider,
+      MigrationLoader migrationsLoader, DatabaseOperationOption option, PrintStream printStream, MigrationHook hook) {
+    try (Connection con = connectionProvider.getConnection();
+        Connection migrationLogCon = migrationLogConnectionProvider.getConnection()) {
       if (option == null) {
         option = new DatabaseOperationOption();
       }
 
       List<Change> changesInDb = Collections.emptyList();
-      if (changelogExists(con, option)) {
-        changesInDb = getChangelog(con, option);
+      if (changelogExists(migrationLogCon, option)) {
+        changesInDb = getChangelog(migrationLogCon, option);
       }
 
       List<Change> migrations = migrationsLoader.getMigrations();
@@ -88,7 +89,7 @@ public final class UpOperation extends DatabaseOperation {
             println(printStream, Util.horizontalLine("Applying: " + change.getFilename(), 80));
             scriptReader = migrationsLoader.getScriptReader(change, false);
             runner.runScript(scriptReader);
-            insertChangelog(change, con, option);
+            insertChangelog(change, migrationLogCon, option);
             println(printStream);
             if (hook != null) {
               hookBindings.put(MigrationHook.HOOK_CONTEXT, new HookContext(connectionProvider, runner, change.clone()));

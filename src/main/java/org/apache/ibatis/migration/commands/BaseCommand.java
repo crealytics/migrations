@@ -219,15 +219,29 @@ public abstract class BaseCommand implements Command {
 
   protected ConnectionProvider getConnectionProvider() {
     try {
-      return new JdbcConnectionProvider(getDriverClassLoader(), environment().getDriver(), environment().getUrl(),
-          environment().getUsername(), environment().getPassword());
+      return new JdbcConnectionProvider(getDriverClassLoader(environment().getDriverPath()), environment().getDriver(),
+          environment().getUrl(), environment().getUsername(), environment().getPassword());
     } catch (Exception e) {
       throw new MigrationException("Error creating ScriptRunner.  Cause: " + e, e);
     }
   }
 
-  private ClassLoader getDriverClassLoader() {
-    File localDriverPath = getCustomDriverPath();
+  protected ConnectionProvider getMigrationLogConnectionProvider() {
+    try {
+      if (environment().getMigrationLogUrl() != null) {
+        return new JdbcConnectionProvider(getDriverClassLoader(environment().getMigrationLogDriverPath()),
+            environment().getMigrationLogDriver(), environment().getMigrationLogUrl(),
+            environment().getMigrationLogUsername(), environment().getMigrationLogPassword());
+      } else {
+        return getConnectionProvider();
+      }
+    } catch (Exception e) {
+      throw new MigrationException("Error creating ScriptRunner.  Cause: " + e, e);
+    }
+  }
+
+  private ClassLoader getDriverClassLoader(String customDriverPath) {
+    File localDriverPath = getCustomDriverPath(customDriverPath);
     if (driverClassLoader != null) {
       return driverClassLoader;
     } else if (localDriverPath.exists()) {
@@ -253,8 +267,7 @@ public abstract class BaseCommand implements Command {
     return null;
   }
 
-  private File getCustomDriverPath() {
-    String customDriverPath = environment().getDriverPath();
+  private File getCustomDriverPath(String customDriverPath) {
     if (customDriverPath != null && customDriverPath.length() > 0) {
       return new File(customDriverPath);
     } else {

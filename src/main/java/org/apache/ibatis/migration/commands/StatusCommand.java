@@ -27,7 +27,7 @@ public final class StatusCommand extends BaseCommand {
 
   @Override
   public void execute(String... params) {
-    operation = new StatusOperation().operate(getConnectionProvider(), getMigrationLoader(),
+    operation = new StatusOperation().operate(getMigrationLogConnectionProvider(), getMigrationLoader(),
         getDatabaseOperationOption(), printStream);
   }
 

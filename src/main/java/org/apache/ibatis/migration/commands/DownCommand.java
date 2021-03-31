@@ -26,7 +26,7 @@ public final class DownCommand extends BaseCommand {
   @Override
   public void execute(String... params) {
     DownOperation operation = new DownOperation(getStepCountParameter(1, params));
-    operation.operate(getConnectionProvider(), getMigrationLoader(), getDatabaseOperationOption(), printStream,
-        createDownHook());
+    operation.operate(getConnectionProvider(), getMigrationLogConnectionProvider(), getMigrationLoader(),
+        getDatabaseOperationOption(), printStream, createDownHook());
   }
 }
